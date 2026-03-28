@@ -1,10 +1,8 @@
 from pydantic import BaseModel
 
-class MessageBase(BaseModel):
+class MessageInput(BaseModel):
     message: str
 
-class MessageInput(MessageBase):
-    pass
-
-class MessageResponse(MessageBase):
+class MessageResponse(BaseModel):
+    message: str
     session_id: str
