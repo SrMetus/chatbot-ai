@@ -1,12 +1,13 @@
 from pydantic import BaseModel, EmailStr
 
-class UserCreate(BaseModel):
+class UserBase(BaseModel):
     email: EmailStr
+
+class UserCreate(UserBase):
     password: str
 
-class UserResponse(BaseModel):
+class UserResponse(UserBase):
     id: int
-    email: str
     is_active: bool
 
     class Config:
