@@ -1,7 +1,11 @@
-from datetime import datetime, timedelta, timezone
 import bcrypt
+from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
+from fastapi import Depends, HTTPException, status
 from app.core.config import settings
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
+from app.database import get_db
 
 def hash_password(password: str) -> str:
     pwd_bytes = password.encode("utf-8")
@@ -26,3 +30,28 @@ def decode_access_token(token: str) -> dict | None:
         return payload
     except JWTError:
         return None
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    payload = decode_access_token(token)
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido o expirado",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    email = payload.get("sub")
+    if email is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido"
+        )
+    from app.models.user import User
+    user = db.query(User).filter(User.email == email).first()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Usuario no encontrado"
+        )
+    return user

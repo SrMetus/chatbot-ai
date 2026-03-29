@@ -3,12 +3,14 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas import client as client_schema
 from app.models import client as client_model
+from app.core.security import get_current_user
+from app.models.user import User
 
 router = APIRouter()
 
 #Endpoint to create a new client, verifying that the email does not already exist.
 @router.post("/", response_model=client_schema.ClientResponse)
-def create_client(client: client_schema.ClientCreate, db: Session = Depends(get_db)):
+def create_client(client: client_schema.ClientCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     existing = db.query(client_model.Client).filter(client_model.Client.email == client.email).first()  
     if existing:
         raise HTTPException(status_code=400, detail="Client already exists")
@@ -33,7 +35,7 @@ def read_client(client_id: int, db: Session = Depends(get_db)):
 
 #Endpoint to update a client by their id.
 @router.patch("/{client_id}", response_model=client_schema.ClientResponse)
-def update_client(client_id: int, client: client_schema.ClientUpdate, db: Session = Depends(get_db)):
+def update_client(client_id: int, client: client_schema.ClientUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     db_client = db.query(client_model.Client).filter(client_model.Client.id == client_id).first()
     if db_client is None:
         raise HTTPException(status_code=404, detail="Client not found")
@@ -45,7 +47,7 @@ def update_client(client_id: int, client: client_schema.ClientUpdate, db: Sessio
 
 #Endpoint to delete a client by their id. (Not deleted, only its status is changed to inactive)
 @router.delete("/{client_id}", response_model=client_schema.ClientResponse)
-def delete_client(client_id: int, db: Session = Depends(get_db)):
+def delete_client(client_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     db_client = db.query(client_model.Client).filter(client_model.Client.id == client_id).first()
     if db_client is None:
         raise HTTPException(status_code=404, detail="Client not found")
