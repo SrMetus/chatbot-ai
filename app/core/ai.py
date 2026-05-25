@@ -8,7 +8,7 @@ def _get_client() -> OpenAI:
     if _client is None:
         _client = OpenAI(
             api_key=settings.DEEPSEEK_API_KEY,
-            base_url="https://api.deepseek.com",
+            base_url=settings.DEEPSEEK_BASE_URL,
         )
     return _client
 
@@ -31,7 +31,7 @@ def get_ai_response(
     messages.append({"role": "user", "content": new_message})
 
     response = client.chat.completions.create(
-        model="deepseek-v4-flash",
+        model=settings.DEEPSEEK_MODEL,
         messages=messages,
         max_tokens=max_tokens,
         temperature=temperature,
