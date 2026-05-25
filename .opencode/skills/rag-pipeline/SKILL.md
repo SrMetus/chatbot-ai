@@ -36,4 +36,4 @@ All pipeline logic lives in `app/core/classifier.py`. The entry point is `proces
 
 ## AI call
 
-`get_ai_response()` in `app/core/ai.py` uses OpenAI SDK with `base_url="https://api.deepseek.com"` and model `deepseek-v4-flash`.
+`get_ai_response()` in `app/core/ai.py` uses the OpenAI SDK with `base_url=settings.DEEPSEEK_BASE_URL` and `model=settings.DEEPSEEK_MODEL`, both configurable via `.env`.

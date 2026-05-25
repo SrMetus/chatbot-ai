@@ -9,25 +9,20 @@ Use this skill when committing, branching, or managing Git workflow.
 
 ## Commit message format
 
-Follow conventional commits with lowercase prefix:
+Follow the project format from AGENTS.md:
 
 ```
-<type>: <short description>
+Sprint X: short description
 ```
 
-Types used in this project:
-- `feat:` — new feature
-- `chore:` — maintenance, config, deps
-- `fix:` — bug fix
-
-Examples from history:
+Examples:
 ```
-feat: JWT authentication - register and login endpoints
-feat: client model, schemas and CRUD endpoints
-chore: update requirements.txt
+Sprint 0: JWT authentication - register and login endpoints
+Sprint 0: client model, schemas and CRUD endpoints
+Sprint 0: update requirements.txt
 ```
 
-No scope prefixes. No body paragraphs. Single line only.
+No body paragraphs. Single line only.
 
 ## Before committing
 

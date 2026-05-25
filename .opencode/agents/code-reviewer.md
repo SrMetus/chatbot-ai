@@ -21,5 +21,12 @@ Mandatory conventions to verify:
 - History limited to 6 messages
 - client_id present on every multi-tenant model
 
+Additional checks:
+- BLOCKER: ForeignKey columns must have `index=True` (PostgreSQL does not auto-index FKs)
+- WARNING: New model PKs should use `BigInteger` not `Integer` for scalable tables
+- SUGGESTION: Use `Annotated[..., Depends(...)]` pattern for reusable dependencies
+- WARNING: Raw SQL `execute()` with f-strings or string concatenation (use bind params instead)
+- SUGGESTION: Composite/partial/covering indexes on tables expected to grow large
+
 Report as: BLOCKER / WARNING / SUGGESTION
 Never modify anything.
