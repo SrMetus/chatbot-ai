@@ -14,7 +14,7 @@ def create_client(client: client_schema.ClientCreate, db: Session = Depends(get_
     existing = db.query(client_model.Client).filter(client_model.Client.email == client.email).first()  
     if existing:
         raise HTTPException(status_code=400, detail="Client already exists")
-    db_client = client_model.Client(**client.dict())
+    db_client = client_model.Client(**client.model_dump())
     db.add(db_client)
     db.commit()
     db.refresh(db_client)
@@ -39,7 +39,7 @@ def update_client(client_id: int, client: client_schema.ClientUpdate, db: Sessio
     db_client = db.query(client_model.Client).filter(client_model.Client.id == client_id).first()
     if db_client is None:
         raise HTTPException(status_code=404, detail="Client not found")
-    for field, value in client.dict(exclude_unset=True).items():
+    for field, value in client.model_dump(exclude_unset=True).items():
         setattr(db_client, field, value)
     db.commit()
     db.refresh(db_client)

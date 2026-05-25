@@ -8,7 +8,7 @@ class ClientBase(BaseModel):
     system_prompt: str | None = None
 
 class ClientCreate(ClientBase):
-    openai_api_key: str | None = None
+    pass
 
 class ClientResponse(ClientBase):
     id: int
@@ -22,5 +22,4 @@ class ClientUpdate(BaseModel):
     email: EmailStr | None = None
     phone: str | None = None
     business_type: str | None = None
-    openai_api_key: str | None = None
     system_prompt: str | None = None
