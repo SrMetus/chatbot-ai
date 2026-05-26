@@ -1,7 +1,4 @@
 ﻿alembic==1.18.4
-annotated-doc==0.0.4
-annotated-types==0.7.0
-anthropic==0.86.0
 anyio==4.13.0
 bcrypt==5.0.0
 certifi==2026.2.25
@@ -16,6 +13,7 @@ ecdsa==0.19.2
 email-validator==2.3.0
 fastapi==0.135.2
 greenlet==3.3.2
+gunicorn==23.0.0
 h11==0.16.0
 httpcore==1.0.9
 httpx==0.28.1
@@ -24,6 +22,8 @@ jiter==0.13.0
 Mako==1.3.10
 MarkupSafe==3.0.3
 openai==2.30.0
+pdfplumber
+pgvector
 psycopg2-binary==2.9.11
 pyasn1==0.6.3
 pycparser==3.0
@@ -34,6 +34,7 @@ python-dotenv==1.2.2
 python-jose==3.5.0
 python-multipart==0.0.22
 rsa==4.9.1
+sentence-transformers
 six==1.17.0
 sniffio==1.3.1
 SQLAlchemy==2.0.48
@@ -42,8 +43,3 @@ tqdm==4.67.3
 typing-inspection==0.4.2
 typing_extensions==4.15.0
 uvicorn==0.42.0
-
-# RAG y embeddings
-pgvector
-sentence-transformers
-pdfplumber
