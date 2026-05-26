@@ -11,6 +11,8 @@ class DocumentEmbedding(Base):
     client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
     content = Column(Text, nullable=False)
     embedding = Column(Vector(384), nullable=False)
+    source_file = Column(String(500), nullable=False, default="")
+    chunk_index = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     client = relationship("Client", back_populates="document_embeddings")

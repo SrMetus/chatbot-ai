@@ -54,14 +54,17 @@ def upload_document(
         raise HTTPException(status_code=400, detail="PDF file is empty or has no extractable text")
 
     chunks = _split_into_chunks(full_text)
+    filename = file.filename or ""
 
     stored = []
-    for chunk_text in chunks:
+    for idx, chunk_text in enumerate(chunks):
         embedding = generate_embedding(chunk_text)
         doc = DocumentEmbedding(
             client_id=client_id,
             content=chunk_text,
             embedding=embedding,
+            source_file=filename,
+            chunk_index=idx,
         )
         db.add(doc)
         stored.append(chunk_text[:80])
