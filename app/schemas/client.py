@@ -50,5 +50,7 @@ class ClientUpdate(BaseModel):
     business_type: str | None = None
     bot_name: str | None = None
     primary_color: str | None = None
+    welcome_message: str | None = None
     subtitle: str | None = None
     system_prompt: str | None = None
+    is_active: bool | None = None
