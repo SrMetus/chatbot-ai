@@ -17,7 +17,7 @@ The developer orchestrates, the agents build.
 - Never exposed to the frontend
 - Multi-tenant: each client completely isolated by `client_id`
 - Conversation history: maximum 6 messages
-- Max tokens per response: 300
+- Max tokens per response: 600
 - No API key per client in database
 - Notary classifier parameterizable by client
 - Embeddings generated locally, never via external API
@@ -29,7 +29,7 @@ Every chat request must go through this pipeline in order:
 1. Exact match in faq_cache → return without calling model
 2. Semantic match in pgvector (threshold 0.85) → return cached response
 3. Notary classifier (parametrizable per client) → if not relevant, return derivation message
-4. RAG top-3 chunks + DeepSeek V4 Flash → max_tokens=300
+4. RAG top-3 chunks + DeepSeek V4 Flash → max_tokens=600
 
 ## Git workflow
 - One branch per sprint: feature/sprint0, feature/sprint1, etc.

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Notaría Valparaíso — Asesoría Notarial</title>
+<meta name="theme-color" content="#1a3a4a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Source Sans 3',sans-serif;color:#1a1a1a;background:#fcfaf7;line-height:1.6}
+.container{max-width:1120px;margin:0 auto;padding:0 24px}
+
+/* header */
+.header{background:#1a3a4a;color:#fff;padding:16px 0;position:sticky;top:0;z-index:100}
+.header .container{display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Playfair Display',serif;font-weight:700;font-size:22px;letter-spacing:0.5px}
+.logo-icon{width:36px;height:36px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px}
+.nav{display:flex;gap:28px;list-style:none}
+.nav a{color:rgba(255,255,255,0.85);text-decoration:none;font-size:14px;font-weight:600;letter-spacing:0.3px;transition:color .2s}
+.nav a:hover{color:#c9a84c}
+
+/* hero */
+.hero{background:linear-gradient(135deg,#1a3a4a 0%,#2a5a6a 100%);color:#fff;padding:80px 0 72px;text-align:center}
+.hero h1{font-family:'Playfair Display',serif;font-size:44px;font-weight:700;margin-bottom:16px;line-height:1.2}
+.hero p{font-size:18px;opacity:.88;max-width:620px;margin:0 auto 28px;line-height:1.7}
+.hero-badge{display:inline-block;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:100px;padding:6px 20px;font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:20px}
+
+/* services */
+.services{padding:72px 0}
+.services h2{font-family:'Playfair Display',serif;font-size:32px;text-align:center;margin-bottom:48px;color:#1a3a4a}
+.service-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.service-card{background:#fff;border-radius:12px;padding:32px 24px;box-shadow:0 2px 12px rgba(0,0,0,0.06);transition:transform .25s,box-shadow .25s;border:1px solid #eee}
+.service-card:hover{transform:translateY(-4px);box-shadow:0 8px 28px rgba(0,0,0,0.1)}
+.service-icon{font-size:32px;margin-bottom:12px}
+.service-card h3{font-family:'Playfair Display',serif;font-size:18px;margin-bottom:8px;color:#1a3a4a}
+.service-card p{font-size:14px;color:#666;line-height:1.7}
+
+/* hours */
+.hours{background:#1a3a4a;color:#fff;padding:56px 0;text-align:center}
+.hours h2{font-family:'Playfair Display',serif;font-size:28px;margin-bottom:24px}
+.hours-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;max-width:480px;margin:0 auto;text-align:left}
+.hours-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.12);font-size:15px}
+.hours-item .day{opacity:.8}
+.hours-item .time{font-weight:600}
+.hours-note{margin-top:20px;font-size:13px;opacity:.6}
+
+/* footer */
+.footer{background:#0f262e;color:rgba(255,255,255,0.6);padding:40px 0 32px;font-size:13px;text-align:center}
+.footer strong{color:rgba(255,255,255,0.85);font-weight:600}
+.footer p{margin:4px 0}
+
+@media(max-width:768px){
+.hero h1{font-size:30px}
+.hero p{font-size:16px}
+.service-grid{grid-template-columns:1fr}
+.nav{gap:16px}
+.nav a{font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="container">
+    <div class="logo">
+      <div class="logo-icon" aria-hidden="true">&#x2696;</div>
+      <span>Notar&iacute;a Valpara&iacute;so</span>
+    </div>
+    <ul class="nav">
+      <li><a href="#">Inicio</a></li>
+      <li><a href="#">Servicios</a></li>
+      <li><a href="#">Horarios</a></li>
+      <li><a href="#">Contacto</a></li>
+    </ul>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-badge">Asesor&iacute;a con IA</div>
+    <h1>Tr&aacute;mites notariales<br>sin filas ni esperas</h1>
+    <p>Resuelve tus dudas al instante con Luna, nuestro asistente inteligente. Escrituras, poderes, certificados y m&aacute;s &mdash; disponible 24/7.</p>
+  </div>
+</section>
+
+<section class="services">
+  <div class="container">
+    <h2>Nuestros servicios</h2>
+    <div class="service-grid">
+      <div class="service-card">
+        <div class="service-icon" aria-hidden="true">&#x1F4DC;</div>
+        <h3>Escrituras P&uacute;blicas</h3>
+        <p>Compraventas, hipotecas, promesas y toda clase de instrumentos p&uacute;blicos con la seguridad jur&iacute;dica que necesitas.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" aria-hidden="true">&#x1F4EC;</div>
+        <h3>Poderes Notariales</h3>
+        <p>Poderes simples, especiales y amplios. Incluye apostilla para uso en el extranjero seg&uacute;n el Convenio de La Haya.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" aria-hidden="true">&#x1F4CB;</div>
+        <h3>Certificados</h3>
+        <p>Vigencia de firma, dominio, supervivencia y certificaciones con emisi&oacute;n el mismo d&iacute;a h&aacute;bil.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" aria-hidden="true">&#x2696;&#xFE0F;</div>
+        <h3>Constituci&oacute;n de Sociedades</h3>
+        <p>SpA, EIRL, Ltda. y sociedades por acciones. Asesor&iacute;a completa en la elecci&oacute;n del tipo societario.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" aria-hidden="true">&#x1F491;</div>
+        <h3>Matrimonios Civiles</h3>
+        <p>Ceremonias civiles en la notar&iacute;a con todos los requisitos legales. Incluye certificado de matrimonio.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" aria-hidden="true">&#x1F4E0;</div>
+        <h3>Legalizaciones</h3>
+        <p>Autenticaci&oacute;n de firmas, protocolizaci&oacute;n de documentos y apostilla para tr&aacute;mites internacionales.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="hours">
+  <div class="container">
+    <h2>Horario de atenci&oacute;n</h2>
+    <div class="hours-grid">
+      <div class="hours-item"><span class="day">Lunes a Viernes</span><span class="time">09:00 &ndash; 18:00</span></div>
+      <div class="hours-item"><span class="day">S&aacute;bado</span><span class="time">10:00 &ndash; 13:00</span></div>
+      <div class="hours-item"><span class="day">Domingo y Festivos</span><span class="time">Cerrado</span></div>
+    </div>
+    <p class="hours-note">Calle Prat 456, of. 302, Valpara&iacute;so &mdash; A pasos de Plaza Sotomayor</p>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <p><strong>Notar&iacute;a Valpara&iacute;so</strong> &mdash; Calle Prat 456, of. 302, Valpara&iacute;so</p>
+    <p>Tel&eacute;fono: +56 32 2XX XXXX &mdash; contacto@notariavalparaiso.cl</p>
+    <p style="margin-top:12px;opacity:.4">&copy; 2026 Notar&iacute;a Valpara&iacute;so. Todos los derechos reservados.</p>
+  </div>
+</footer>
+
+<script src="widget.js"
+        data-client-id="1"
+        data-api-url="http://localhost:8000">
+</script>
+</body>
+</html>

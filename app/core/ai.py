@@ -17,7 +17,7 @@ def get_ai_response(
     system_prompt: str,
     history: list,
     new_message: str,
-    max_tokens: int = 300,
+    max_tokens: int = 600,
     temperature: float = 0.7,
 ) -> str:
     client = _get_client()

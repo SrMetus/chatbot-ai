@@ -11,6 +11,6 @@ class Conversation(Base):
     session_id = Column(String(100), nullable=False)
     role = Column(String(20), nullable=False)
     message = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     client = relationship("Client", back_populates="conversations")

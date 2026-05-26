@@ -16,6 +16,17 @@ CHUNK_OVERLAP = 50
 
 
 def _split_into_chunks(text: str) -> list[str]:
+    """Split a text into overlapping word chunks.
+
+    Uses CHUNK_SIZE words per chunk with CHUNK_OVERLAP words of
+    sliding overlap between consecutive chunks.
+
+    Args:
+        text: The full text to split.
+
+    Returns:
+        list[str]: Ordered list of text chunks.
+    """
     words = text.split()
     chunks = []
     i = 0
@@ -36,12 +47,37 @@ def upload_document(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    """Upload a PDF, extract text, chunk it, and store embeddings.
+
+    Only PDF files up to 10 MB are accepted. Each chunk is embedded
+    locally and persisted as a DocumentEmbedding row.
+
+    Args:
+        client_id: Target client ID.
+        file: The PDF file to process.
+        db: Database session.
+        current_user: Authenticated admin user.
+
+    Returns:
+        dict: Confirmation message, chunk count, and a preview of the
+            first 3 chunks.
+
+    Raises:
+        HTTPException 404: If the client does not exist.
+        HTTPException 400: If the file is not a PDF, cannot be read,
+            or has no extractable text.
+        HTTPException 413: If the file exceeds 10 MB.
+    """
     db_client = db.query(client_model.Client).filter(client_model.Client.id == client_id).first()
     if db_client is None:
         raise HTTPException(status_code=404, detail="Client not found")
 
     if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are accepted")
+
+    MAX_SIZE = 10 * 1024 * 1024
+    if file.size and file.size > MAX_SIZE:
+        raise HTTPException(status_code=413, detail="El archivo no puede superar los 10MB.")
 
     try:
         contents = file.file.read()

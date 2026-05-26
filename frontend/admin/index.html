@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Luna Chat — Panel de Administraci&oacute;n</title>
+<meta name="theme-color" content="#1a5276">
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script>
+tailwind.config={
+  theme:{
+    extend:{
+      colors:{navy:{600:'#1a5276',700:'#153e5a',800:'#0f2b3f'},gold:{400:'#c9a84c'}},
+      fontFamily:{sans:['system-ui','-apple-system','sans-serif'],serif:['Georgia','Times New Roman','serif']}
+    }
+  }
+}
+</script>
+<style>
+body{background:#f5f3ef}
+.card{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,0.06);border:1px solid #eae6e0}
+.btn-primary{background:#1a5276;color:#fff;padding:10px 20px;border-radius:8px;font-weight:600;transition:background .2s}
+.btn-primary:hover{background:#153e5a}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-secondary{background:#fff;color:#1a5276;border:1px solid #1a5276;padding:10px 20px;border-radius:8px;font-weight:600;transition:all .2s}
+.btn-secondary:hover{background:#f0f4f8}
+.btn-danger{background:#dc2626;color:#fff;padding:10px 20px;border-radius:8px;font-weight:600;transition:background .2s}
+.btn-danger:hover{background:#b91c1c}
+.input-field{width:100%;border:1px solid #d1d5db;border-radius:8px;padding:10px 14px;font-size:14px;transition:border-color .2s}
+.input-field:focus{outline:none;border-color:#1a5276;box-shadow:0 0 0 3px rgba(26,82,118,0.12)}
+.tab-active{border-bottom:2px solid #1a5276;color:#1a5276;font-weight:600}
+.tab-inactive{border-bottom:2px solid transparent;color:#6b7280;cursor:pointer}
+.tab-inactive:hover{color:#374151}
+.spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body class="min-h-screen font-sans text-gray-900">
+
+<div id="root"></div>
+
+<script type="text/babel">
+const {useState,useEffect} = React;
+const API = window.location.origin;
+const INSTALL_API_URL = window.location.origin;
+
+// ---- helpers ----
+function onUnauthorized() {
+  localStorage.removeItem('luna_token');
+  window.dispatchEvent(new CustomEvent('luna-unauthorized'));
+}
+
+function api(path, opts={}) {
+  const headers = {};
+  const token = localStorage.getItem('luna_token');
+  if (token) headers['Authorization'] = 'Bearer '+token;
+  if (opts.body) headers['Content-Type'] = 'application/json';
+  return fetch(API+path, {...opts,headers:{...headers,...opts.headers}})
+    .then(r=>{
+      if (r.status === 401) { onUnauthorized(); return Promise.reject('Sesi\u00F3n expirada'); }
+      if (!r.ok) return r.json().then(e=>Promise.reject(e.detail||'Error '+r.status));
+      return r.json();
+    });
+}
+
+function renderMarkdown(text) {
+  function esc(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML}
+  let html = esc(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  const lines = html.split('\n');
+  const out = [];
+  let inOl = false;
+  let inUl = false;
+  for (let i = 0; i < lines.length; i++) {
+    const olMatch = lines[i].match(/^(\d+)\.\s+(.*)/);
+    const ulMatch = lines[i].match(/^[-\*]\s+(.*)/);
+    if (olMatch) {
+      if (inUl) { out.push('</ul>'); inUl = false; }
+      if (!inOl) { out.push('<ol>'); inOl = true; }
+      out.push('<li>' + olMatch[2] + '</li>');
+    } else if (ulMatch) {
+      if (inOl) { out.push('</ol>'); inOl = false; }
+      if (!inUl) { out.push('<ul>'); inUl = true; }
+      out.push('<li>' + ulMatch[1] + '</li>');
+    } else {
+      if (inOl) { out.push('</ol>'); inOl = false; }
+      if (inUl) { out.push('</ul>'); inUl = false; }
+      out.push(lines[i]);
+    }
+  }
+  if (inOl) out.push('</ol>');
+  if (inUl) out.push('</ul>');
+  return out.join('\n');
+}
+
+// ---- Login ----
+function LoginPage({onLogin}) {
+  const [email,setEmail]=useState(''); const [pass,setPass]=useState('');
+  const [loading,setLoading]=useState(false); const [err,setErr]=useState('');
+
+  function handleSubmit(e){e.preventDefault();setLoading(true);setErr('');
+    const fd=new FormData(); fd.append('username',email); fd.append('password',pass);
+    fetch(API+'/api/v1/auth/login',{method:'POST',body:fd})
+      .then(r=>{if(!r.ok)throw new Error('Credenciales incorrectas');return r.json()})
+      .then(d=>{localStorage.setItem('luna_token',d.access_token);onLogin()})
+      .catch(e=>setErr(e.message)).finally(()=>setLoading(false));
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#f5f3ef] p-4">
+      <div className="card p-8 w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="w-14 h-14 bg-navy-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-white text-2xl font-bold">L</span>
+          </div>
+          <h1 className="text-2xl font-bold text-navy-600 font-serif">Luna Chat</h1>
+          <p className="text-gray-500 text-sm mt-1">Panel de administraci&oacute;n</p>
+        </div>
+        {err && <div className="bg-red-50 text-red-700 text-sm p-3 rounded-lg mb-4">{err}</div>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input type="email" value={email} onChange={e=>setEmail(e.target.value)} required className="input-field" placeholder="admin@ejemplo.cl" autoComplete="email" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Contrase&ntilde;a</label>
+            <input type="password" value={pass} onChange={e=>setPass(e.target.value)} required className="input-field" placeholder="••••••••" autoComplete="current-password" />
+          </div>
+          <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2">
+            {loading && <span className="spinner"></span>}
+            {loading ? 'Ingresando…' : 'Ingresar'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ---- Dashboard ----
+function Dashboard({onNavigate}) {
+  const [stats,setStats]=useState(null); const [loading,setLoading]=useState(true); const [error,setError]=useState('');
+
+  useEffect(()=>{
+    api('/api/v1/admin/stats')
+      .then(d=>{setStats(d);setLoading(false)})
+      .catch(e=>{setError(typeof e==='string'?e:'Error al cargar estad\u00EDsticas');setLoading(false)})
+  },[]);
+
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="spinner border-navy-600 border-t-transparent" style={{width:32,height:32}}></div></div>;
+  if (error) return <div className="p-6 max-w-6xl mx-auto"><div className="bg-red-50 text-red-700 text-sm p-4 rounded-lg">{error}</div></div>;
+
+  const cards=[
+    {label:'Clientes Totales',value:stats?.total_clients||0,color:'bg-navy-600'},
+    {label:'Clientes Activos',value:stats?.active_clients||0,color:'bg-emerald-600'},
+    {label:'Conversaciones Hoy',value:stats?.conversations_today||0,color:'bg-amber-600'},
+  ];
+
+  return (
+    <div className="p-6 max-w-6xl mx-auto">
+      <h1 className="text-2xl font-bold text-navy-600 font-serif mb-6">Dashboard</h1>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+        {cards.map(c=><div className="card p-6">
+          <div className={'w-10 h-10 rounded-lg flex items-center justify-center text-white text-lg mb-3 '+c.color}>{c.value}</div>
+          <p className="text-gray-500 text-sm">{c.label}</p>
+        </div>)}
+      </div>
+      <div className="card p-6">
+        <h2 className="font-semibold text-lg mb-4">Acciones r&aacute;pidas</h2>
+        <div className="flex flex-wrap gap-3">
+          <button onClick={()=>onNavigate('clients')} className="btn-secondary text-sm">Gestionar Clientes</button>
+          <button onClick={()=>onNavigate('new-client')} className="btn-primary text-sm">+ Nuevo Cliente</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---- ClientsList ----
+function ClientsList({onSelect,onBack}) {
+  const [list,setList]=useState([]); const [loading,setLoading]=useState(true);
+  const [showNew,setShowNew]=useState(false); const [newForm,setNewForm]=useState({name:'',email:'',business_type:''});
+  const [newErr,setNewErr]=useState(''); const [newLoading,setNewLoading]=useState(false);
+
+  function load(){setLoading(true);api('/api/v1/clients/').then(d=>{setList(d);setLoading(false)})}
+  useEffect(load,[]);
+
+  function createClient(e){e.preventDefault();setNewLoading(true);setNewErr('');
+    api('/api/v1/clients/',{method:'POST',body:JSON.stringify(newForm)})
+      .then(()=>{setShowNew(false);setNewForm({name:'',email:'',business_type:''});load()})
+      .catch(e=>setNewErr(e.message||'Error')).finally(()=>setNewLoading(false));
+  }
+
+  function toggleActive(c){api('/api/v1/clients/'+c.id,{method:'PATCH',body:JSON.stringify({is_active:!c.is_active})}).then(load)}
+
+  return (
+    <div className="p-6 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <button onClick={onBack} className="text-gray-500 hover:text-gray-800 text-xl">&larr;</button>
+          <h1 className="text-2xl font-bold text-navy-600 font-serif">Clientes</h1>
+        </div>
+        <button onClick={()=>setShowNew(true)} className="btn-primary text-sm">+ Nuevo Cliente</button>
+      </div>
+
+      {showNew && <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4" onClick={e=>e.target===e.currentTarget&&setShowNew(false)}>
+        <div className="card p-6 w-full max-w-md" onClick={e=>e.stopPropagation()}>
+          <h2 className="text-lg font-semibold mb-4">Nuevo Cliente</h2>
+          {newErr && <div className="bg-red-50 text-red-700 text-sm p-3 rounded-lg mb-3">{newErr}</div>}
+          <form onSubmit={createClient} className="space-y-3">
+            <input value={newForm.name} onChange={e=>setNewForm({...newForm,name:e.target.value})} placeholder="Nombre" required className="input-field" />
+            <input type="email" value={newForm.email} onChange={e=>setNewForm({...newForm,email:e.target.value})} placeholder="Email" required className="input-field" />
+            <input value={newForm.business_type} onChange={e=>setNewForm({...newForm,business_type:e.target.value})} placeholder="Tipo de negocio (ej: notar&iacute;a chilena)" required className="input-field" />
+            <div className="flex gap-2 justify-end pt-2">
+              <button type="button" onClick={()=>setShowNew(false)} className="btn-secondary text-sm">Cancelar</button>
+              <button type="submit" disabled={newLoading} className="btn-primary text-sm">{newLoading?'Creando…':'Crear'}</button>
+            </div>
+          </form>
+        </div>
+      </div>}
+
+      {loading ? <div className="flex justify-center py-12"><div className="spinner border-navy-600 border-t-transparent" style={{width:32,height:32}}></div></div>
+      : list.length===0 ? <p className="text-gray-400 text-center py-12">No hay clientes registrados.</p>
+      : <div className="card overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 text-gray-600 text-left">
+            <tr>
+              <th className="p-4 font-medium">Nombre</th>
+              <th className="p-4 font-medium">Tipo de negocio</th>
+              <th className="p-4 font-medium">Estado</th>
+              <th className="p-4 font-medium text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {list.map(c=><tr key={c.id} className="hover:bg-gray-50 cursor-pointer" onClick={()=>onSelect(c.id)}>
+              <td className="p-4 font-medium">{c.name}</td>
+              <td className="p-4 text-gray-600">{c.business_type}</td>
+              <td className="p-4">{c.is_active
+                ? <span className="bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full text-xs font-medium">Activo</span>
+                : <span className="bg-gray-200 text-gray-600 px-2.5 py-0.5 rounded-full text-xs font-medium">Inactivo</span>}
+              </td>
+              <td className="p-4 text-right">
+                <button onClick={e=>{e.stopPropagation();toggleActive(c)}}
+                  className="text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-100">
+                  {c.is_active ? 'Desactivar' : 'Activar'}
+                </button>
+              </td>
+            </tr>)}
+          </tbody>
+        </table>
+      </div>}
+    </div>
+  );
+}
+
+// ---- ClientDetail ----
+function ClientDetail({clientId,onBack}) {
+  const [tab,setTab]=useState('edit');
+  const [client,setClient]=useState(null); const [loading,setLoading]=useState(true);
+  const [saveMsg,setSaveMsg]=useState('');
+
+  useEffect(()=>{setLoading(true);
+    api('/api/v1/clients/'+clientId).then(d=>{setClient(d);setLoading(false)})
+  },[clientId]);
+
+  function save(fields){setSaveMsg('');
+    api('/api/v1/clients/'+clientId,{method:'PATCH',body:JSON.stringify(fields)})
+      .then(d=>{setClient(d);setSaveMsg('Guardado');setTimeout(()=>setSaveMsg(''),2500)})
+      .catch(e=>setSaveMsg('Error: '+(e.message||e)));
+  }
+
+  if (loading) return <div className="p-6 flex justify-center"><div className="spinner border-navy-600 border-t-transparent" style={{width:32,height:32}}></div></div>;
+  if (!client) return <div className="p-6 text-center text-gray-500">Cliente no encontrado</div>;
+
+  const tabs=[
+    {key:'edit',label:'Editar'},
+    {key:'documents',label:'Documentos'},
+    {key:'conversations',label:'Conversaciones'},
+  ];
+
+  return (
+    <div className="p-6 max-w-6xl mx-auto">
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={onBack} className="text-gray-500 hover:text-gray-800 text-xl">&larr;</button>
+        <h1 className="text-2xl font-bold text-navy-600 font-serif">{client.name}</h1>
+        {!client.is_active && <span className="bg-gray-200 text-gray-600 px-2.5 py-0.5 rounded-full text-xs font-medium">Inactivo</span>}
+      </div>
+
+      <div className="flex gap-6 border-b border-gray-200 mb-6">
+        {tabs.map(t=><button key={t.key} onClick={()=>setTab(t.key)} className={'pb-3 px-1 text-sm '+(tab===t.key?'tab-active':'tab-inactive')}>{t.label}</button>)}
+      </div>
+
+      {tab==='edit' && <EditTab client={client} onSave={save} saveMsg={saveMsg} />}
+      {tab==='documents' && <DocumentsTab clientId={clientId} />}
+      {tab==='conversations' && <ConversationsTab clientId={clientId} />}
+    </div>
+  );
+}
+
+function EditTab({client,onSave,saveMsg}) {
+  const [form,setForm]=useState({
+    name:client.name,business_type:client.business_type,
+    bot_name:client.bot_name||'',subtitle:client.subtitle||'Asistente Virtual',primary_color:client.primary_color||'#1a5276',
+    welcome_message:client.welcome_message||'',system_prompt:client.system_prompt||'',
+  });
+  const [copied,setCopied]=useState(false);
+
+  function set(f,k){setForm({...form,[k]:f.target.value})}
+
+  function copyCode(){
+    const code = '<script src=\"' + INSTALL_API_URL + '/widget.js\"\n        data-client-id=\"' + client.id + '\"\n        data-api-url=\"' + INSTALL_API_URL + '\">\n</scr' + 'ipt>';
+    navigator.clipboard.writeText(code).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2000)});
+  }
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="card p-6 space-y-4">
+        <h3 className="font-semibold text-gray-800">Informaci&oacute;n general</h3>
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Nombre del cliente</label>
+          <input value={form.name} onChange={e=>set(e,'name')} className="input-field" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Tipo de negocio</label>
+          <input value={form.business_type} onChange={e=>set(e,'business_type')} className="input-field" placeholder="notar&iacute;a chilena" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Email</label>
+          <input value={client.email} disabled className="input-field bg-gray-50 text-gray-400" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Estado</label>
+          <div className="flex items-center gap-3 mt-1">
+            <span className={client.is_active?'text-emerald-600 font-medium':'text-gray-400'}>{client.is_active?'Activo':'Inactivo'}</span>
+            <button onClick={()=>onSave({is_active:!client.is_active})}
+              className={'text-xs px-3 py-1.5 rounded border '+(client.is_active?'border-red-300 text-red-600 hover:bg-red-50':'border-emerald-300 text-emerald-600 hover:bg-emerald-50')}>
+              {client.is_active ? 'Desactivar' : 'Activar'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="card p-6 space-y-4">
+        <h3 className="font-semibold text-gray-800">Configuraci&oacute;n del widget</h3>
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Nombre del bot</label>
+          <input value={form.bot_name} onChange={e=>set(e,'bot_name')} className="input-field" placeholder="Luna" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Subt&iacute;tulo del bot</label>
+          <input value={form.subtitle} onChange={e=>set(e,'subtitle')} className="input-field" placeholder="Asistente Virtual" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Color primario</label>
+          <div className="flex items-center gap-3">
+            <input type="color" value={form.primary_color} onChange={e=>set(e,'primary_color')} className="w-10 h-10 rounded border border-gray-300 cursor-pointer p-0.5" />
+            <span className="text-sm text-gray-500 font-mono">{form.primary_color}</span>
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Mensaje de bienvenida</label>
+          <textarea value={form.welcome_message} onChange={e=>set(e,'welcome_message')} rows={2} className="input-field resize-none" placeholder="¡Hola! Soy Luna, tu asistente notarial."></textarea>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">System prompt</label>
+          <textarea value={form.system_prompt} onChange={e=>set(e,'system_prompt')} rows={4} className="input-field resize-none font-mono text-xs" placeholder="Eres un asistente útil para una notaría chilena."></textarea>
+        </div>
+      </div>
+
+      <div className="lg:col-span-2 flex items-center gap-3">
+        <button onClick={()=>onSave(form)} className="btn-primary text-sm">Guardar cambios</button>
+        {saveMsg && <span className={'text-sm '+(saveMsg.startsWith('Error')?'text-red-600':'text-emerald-600')}>{saveMsg}</span>}
+      </div>
+
+      <div className="lg:col-span-2 card p-6 space-y-3">
+        <h3 className="font-semibold text-gray-800">C&oacute;digo de instalaci&oacute;n</h3>
+        <p className="text-xs text-gray-500">Copia este c&oacute;digo en tu sitio web para integrar el widget.</p>
+        <pre className="bg-gray-900 text-gray-100 text-xs font-mono p-4 rounded-lg overflow-x-auto whitespace-pre-wrap">{"<script src=\"" + INSTALL_API_URL + "/widget.js\"\n        data-client-id=\"" + client.id + "\"\n        data-api-url=\"" + INSTALL_API_URL + "\">\n</scr" + "ipt>"}</pre>
+        <div className="flex items-center gap-2">
+          <button onClick={copyCode} className="btn-secondary text-xs">Copiar c&oacute;digo</button>
+          {copied && <span className="text-emerald-600 text-xs font-medium">¡Copiado!</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DocumentsTab({clientId}) {
+  const [docs,setDocs]=useState([]); const [loading,setLoading]=useState(true);
+  const [uploading,setUploading]=useState(false); const [msg,setMsg]=useState('');
+
+  function load(){setLoading(true);api('/api/v1/admin/clients/'+clientId+'/documents').then(d=>{setDocs(d);setLoading(false)})}
+  useEffect(load,[clientId]);
+
+  function upload(e){const f=e.target.files[0];if(!f)return;setUploading(true);setMsg('');
+    const fd=new FormData();fd.append('file',f);
+    const token=localStorage.getItem('luna_token');
+    fetch(API+'/api/v1/documents/'+clientId+'/upload',{method:'POST',headers:{'Authorization':'Bearer '+token},body:fd})
+      .then(r=>r.json()).then(d=>{setMsg(d.message||'OK');load()})
+      .catch(e=>setMsg('Error: '+(e.message||e))).finally(()=>{setUploading(false);e.target.value=''});
+  }
+
+  return (
+    <div className="card p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-semibold text-gray-800">Documentos subidos</h3>
+        <label className="btn-primary text-sm cursor-pointer inline-flex items-center gap-1">
+          {uploading ? <span className="spinner" style={{width:14,height:14}}></span> : '+ Subir PDF'}
+          <input type="file" accept=".pdf" onChange={upload} className="hidden" disabled={uploading} />
+        </label>
+      </div>
+      {msg && <div className={'text-sm mb-3 '+(msg.startsWith('Error')?'text-red-600':'text-emerald-600')}>{msg}</div>}
+      {loading ? <div className="flex justify-center py-6"><div className="spinner border-navy-600 border-t-transparent" style={{width:24,height:24}}></div></div>
+      : docs.length===0 ? <p className="text-gray-400 text-center py-6 text-sm">No hay documentos subidos.</p>
+      : <div className="space-y-2">
+        {docs.map(d=><div key={d.source_file} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">📄</span>
+            <span className="font-medium">{d.source_file}</span>
+            <span className="text-gray-400 text-xs">{d.chunks_count} chunk{d.chunks_count!==1?'s':''}</span>
+          </div>
+          <span className="text-gray-400 text-xs">{d.created_at ? new Date(d.created_at).toLocaleDateString('es-CL') : ''}</span>
+        </div>)}
+      </div>}
+    </div>
+  );
+}
+
+function ConversationsTab({clientId}) {
+  const [convs,setConvs]=useState([]); const [loading,setLoading]=useState(true);
+
+  useEffect(()=>{setLoading(true);
+    api('/api/v1/admin/clients/'+clientId+'/conversations').then(d=>{setConvs(d);setLoading(false)})
+  },[clientId]);
+
+  if (loading) return <div className="flex justify-center py-6"><div className="spinner border-navy-600 border-t-transparent" style={{width:24,height:24}}></div></div>;
+
+  if (convs.length===0) return <div className="card p-6"><p className="text-gray-400 text-center text-sm">No hay conversaciones.</p></div>;
+
+  const groups={}; convs.forEach(c=>{if(!groups[c.session_id])groups[c.session_id]=[];groups[c.session_id].push(c)});
+
+  return (
+    <div className="card p-6 space-y-4 max-h-[600px] overflow-y-auto">
+      {Object.entries(groups).map(([sid,msgs])=>{
+        const fecha=msgs[0]?.created_at?new Date(msgs[0].created_at).toLocaleString('es-CL'):'';
+        return <div key={sid} className="border border-gray-100 rounded-lg p-4 bg-gray-50/50">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-gray-400 font-mono">{sid.slice(0,8)}…</span>
+            <span className="text-xs text-gray-400">{fecha}</span>
+          </div>
+          <div className="space-y-1.5">
+            {msgs.slice().reverse().map(m=><div key={m.id} className={'text-sm p-2 rounded-lg '+(m.role==='user'?'bg-navy-600 text-white ml-6':'bg-white border border-gray-200 mr-6')}>
+              <span className="text-xs opacity-70 block mb-0.5">{m.role==='user'?'Usuario':'Luna'}</span>
+              {m.role==='bot'
+                ? <span dangerouslySetInnerHTML={{__html:renderMarkdown(m.message)}} />
+                : m.message}
+            </div>)}
+          </div>
+        </div>
+      })}
+    </div>
+  );
+}
+
+// ---- App ----
+function App() {
+  const [view,setView]=useState('loading');
+  const [selectedId,setSelectedId]=useState(null);
+
+  useEffect(()=>{setView(localStorage.getItem('luna_token')?'dashboard':'login');
+    function handler(){setView('login')}
+    window.addEventListener('luna-unauthorized', handler);
+    return ()=>window.removeEventListener('luna-unauthorized', handler);
+  },[]);
+
+  function logout(){localStorage.removeItem('luna_token');setView('login')}
+
+  if (view==='loading') return null;
+
+  if (view==='login') return <LoginPage onLogin={()=>setView('dashboard')} />;
+
+  return (
+    <div className="min-h-screen">
+      <header className="bg-navy-600 text-white sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-sm font-bold">L</div>
+            <span className="font-semibold text-sm">Luna Chat</span>
+          </div>
+          <nav className="flex items-center gap-5 text-sm">
+            <button onClick={()=>setView('dashboard')} className={'opacity-70 hover:opacity-100 transition '+(view==='dashboard'?'opacity-100 font-semibold':'')}>Dashboard</button>
+            <button onClick={()=>setView('clients')} className={'opacity-70 hover:opacity-100 transition '+(view==='clients'||view==='client-detail'?'opacity-100 font-semibold':'')}>Clientes</button>
+            <button onClick={logout} className="opacity-60 hover:opacity-100 transition">Salir</button>
+          </nav>
+        </div>
+      </header>
+
+      {view==='dashboard' && <Dashboard onNavigate={(v)=>{if(v==='new-client')setView('clients');else setView(v)}} />}
+      {view==='clients' && <ClientsList onSelect={(id)=>{setSelectedId(id);setView('client-detail')}} onBack={()=>setView('dashboard')} />}
+      {view==='client-detail' && <ClientDetail clientId={selectedId} onBack={()=>setView('clients')} />}
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>

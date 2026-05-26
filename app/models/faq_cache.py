@@ -13,6 +13,6 @@ class FaqCache(Base):
     answer = Column(Text, nullable=False)
     embedding = Column(Vector(384), nullable=False)
     hit_count = Column(Integer, default=0)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     client = relationship("Client", back_populates="faq_entries")
