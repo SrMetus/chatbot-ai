@@ -1,5 +1,6 @@
+import math
 from sqlalchemy.orm import Session
-from sqlalchemy import func, text
+from sqlalchemy import func
 from app.core.embeddings import generate_embedding
 from app.core.ai import get_ai_response
 from app.models.client import Client
@@ -11,6 +12,15 @@ HISTORY_LIMIT = 6
 SIMILARITY_THRESHOLD = 0.85
 FAQ_MATCH_THRESHOLD = 0.85
 RAG_MATCH_THRESHOLD = 0.75
+
+
+def _cosine_similarity(a: list[float], b: list[float]) -> float:
+    dot = sum(x * y for x, y in zip(a, b))
+    norm_a = math.sqrt(sum(x * x for x in a))
+    norm_b = math.sqrt(sum(y * y for y in b))
+    if norm_a == 0 or norm_b == 0:
+        return 0.0
+    return dot / (norm_a * norm_b)
 
 def get_recent_history(db: Session, client_id: int, session_id: str) -> list:
     rows = (
@@ -43,7 +53,6 @@ def check_exact_faq(db: Session, client_id: int, message: str) -> str | None:
 
 def check_semantic_faq(db: Session, client_id: int, message: str) -> str | None:
     embedding = generate_embedding(message)
-    embedding_str = "[" + ",".join(str(v) for v in embedding) + "]"
 
     entry = (
         db.query(FaqCache)
@@ -54,8 +63,7 @@ def check_semantic_faq(db: Session, client_id: int, message: str) -> str | None:
     )
 
     if entry:
-        dist = entry.embedding.cosine_distance(embedding)
-        similarity = 1 - dist
+        similarity = _cosine_similarity(entry.embedding, embedding)
         if similarity >= FAQ_MATCH_THRESHOLD:
             entry.hit_count = FaqCache.hit_count + 1
             db.commit()
@@ -79,7 +87,6 @@ def classify_relevance(client: Client, message: str) -> bool:
 
 def search_rag_context(db: Session, client_id: int, message: str) -> str:
     embedding = generate_embedding(message)
-    embedding_str = "[" + ",".join(str(v) for v in embedding) + "]"
 
     rows = (
         db.query(DocumentEmbedding)
@@ -92,18 +99,12 @@ def search_rag_context(db: Session, client_id: int, message: str) -> str:
     if not rows:
         return ""
 
-    for row in rows:
-        dist = row.embedding.cosine_distance(embedding)
-        similarity = 1 - dist
-        if similarity >= RAG_MATCH_THRESHOLD:
-            pass
-        else:
-            rows = [r for r in rows if (1 - r.embedding.cosine_distance(embedding)) >= RAG_MATCH_THRESHOLD]
+    filtered = [r for r in rows if _cosine_similarity(r.embedding, embedding) >= RAG_MATCH_THRESHOLD]
 
-    if not rows:
+    if not filtered:
         return ""
 
-    context_parts = [f"- {r.content}" for r in rows]
+    context_parts = [f"- {r.content}" for r in filtered]
     return "Contexto relevante:\n" + "\n".join(context_parts)
 
 def validate_response(response: str) -> str:

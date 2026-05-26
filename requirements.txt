@@ -46,3 +46,4 @@ uvicorn==0.42.0
 # RAG y embeddings
 pgvector
 sentence-transformers
+pdfplumber
