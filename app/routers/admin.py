@@ -114,11 +114,3 @@ def admin_client_documents(
         for r in rows
     ]
 
-
-@router.post("/seed-notary", include_in_schema=False)
-def run_seed(db: SessionDep, current_user: CurrentUserDep):
-    """Temporary endpoint to seed notary FAQs. Delete after use."""
-    from scripts.seed_notary import seed_faqs
-
-    result = seed_faqs(db)
-    return {"message": "Seed completed", "records": result}
