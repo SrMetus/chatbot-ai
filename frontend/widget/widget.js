@@ -1,5 +1,5 @@
 /**
- * Luna Chat Widget — embeddable chatbot for Chilean notaries.
+ * Luna Chat Widget — embeddable chatbot for any business.
  *
  * Include via a <script> tag with data-* attributes:
  *   data-client-id  — Client ID (default "1")
@@ -58,7 +58,11 @@
       botName = data.bot_name || botName;
       subtitle = data.subtitle || subtitle;
       welcomeMessage = data.welcome_message !== undefined && data.welcome_message !== null ? data.welcome_message : null;
-      if (data.is_active === false) return;
+      if (data.is_active === false) {
+        if (loadingEl && loadingEl.parentNode) loadingEl.parentNode.removeChild(loadingEl);
+        console.warn("Luna Chat: widget is inactive for client " + clientId);
+        return;
+      }
       configLoaded = true;
       if (loadingEl && loadingEl.parentNode) loadingEl.parentNode.removeChild(loadingEl);
       buildWidget();
@@ -75,7 +79,7 @@
     btn.classList.toggle("lw-hidden", isOpen);
     if (isOpen && !welcomeShown) {
       welcomeShown = true;
-      addMessage(welcomeMessage || ("\u00A1Hola! Soy " + botName + ", tu asistente notarial. \u00BFEn qu\u00E9 puedo ayudarte?"), "bot");
+      addMessage(welcomeMessage || ("\u00A1Hola! Soy " + botName + ", tu asistente virtual. \u00BFEn qu\u00E9 puedo ayudarte?"), "bot");
     }
   }
 

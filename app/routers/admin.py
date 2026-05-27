@@ -1,12 +1,13 @@
 from typing import Annotated
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
 from app.models import client as client_model, conversation as conversation_model, embedding as embedding_model
+from app.schemas.client import ClientResponse
 
 SessionDep = Annotated[Session, Depends(get_db)]
 CurrentUserDep = Annotated[User, Depends(get_current_user)]
@@ -40,6 +41,29 @@ def admin_stats(
         "active_clients": active_clients,
         "conversations_today": conversations_today,
     }
+
+
+@router.get("/clients/{client_id}", response_model=ClientResponse)
+def admin_client_detail(
+    client_id: int,
+    db: SessionDep,
+    current_user: CurrentUserDep,
+):
+    """Return full client details including email (JWT-protected).
+
+    Args:
+        client_id: Target client ID.
+
+    Returns:
+        ClientResponse: Full client data with email.
+
+    Raises:
+        HTTPException 404: If the client does not exist.
+    """
+    db_client = db.query(client_model.Client).filter(client_model.Client.id == client_id).first()
+    if db_client is None:
+        raise HTTPException(status_code=404, detail="Client not found")
+    return db_client
 
 
 @router.get("/clients/{client_id}/conversations")

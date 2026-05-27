@@ -267,7 +267,7 @@ function ClientDetail({clientId,onBack}) {
   const [saveMsg,setSaveMsg]=useState('');
 
   useEffect(()=>{setLoading(true);
-    api('/api/v1/clients/'+clientId).then(d=>{setClient(d);setLoading(false)})
+    api('/api/v1/admin/clients/'+clientId).then(d=>{setClient(d);setLoading(false)})
   },[clientId]);
 
   function save(fields){setSaveMsg('');
