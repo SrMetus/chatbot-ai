@@ -188,7 +188,7 @@ function ClientsList({onSelect,onBack}) {
   useEffect(load,[]);
 
   function createClient(e){e.preventDefault();setNewLoading(true);setNewErr('');
-    api('/api/v1/clients/',{method:'POST',body:JSON.stringify(newForm)})
+    api('/api/v1/clients/',{method:'POST',body:JSON.stringify({name:newForm.name,email:newForm.email,business_type:newForm.business_type})})
       .then(()=>{setShowNew(false);setNewForm({name:'',email:'',business_type:''});load()})
       .catch(e=>setNewErr(e.message||'Error')).finally(()=>setNewLoading(false));
   }
@@ -306,7 +306,7 @@ function ClientDetail({clientId,onBack}) {
 
 function EditTab({client,onSave,saveMsg}) {
   const [form,setForm]=useState({
-    name:client.name,business_type:client.business_type,
+    name:client.name,email:client.email||'',business_type:client.business_type,
     bot_name:client.bot_name||'',subtitle:client.subtitle||'Asistente Virtual',primary_color:client.primary_color||'#1a5276',
     welcome_message:client.welcome_message||'',system_prompt:client.system_prompt||'',
   });
@@ -333,7 +333,7 @@ function EditTab({client,onSave,saveMsg}) {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">Email</label>
-          <input value={client.email} disabled className="input-field bg-gray-50 text-gray-400" />
+          <input type="email" value={form.email} onChange={e=>set(e,'email')} className="input-field" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">Estado</label>
