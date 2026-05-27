@@ -13,6 +13,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models.faq_cache import FaqCache
 from app.models.client import Client
@@ -198,14 +199,11 @@ FAQ_DATA = [
 ]
 
 
-def seed_faqs(client_id: int) -> int:
-    session = SessionLocal()
-
-    client = session.query(Client).filter(Client.id == client_id).first()
+def seed_faqs(db: Session, client_id: int = 1) -> int:
+    client = db.query(Client).filter(Client.id == client_id).first()
     if not client:
         print(f"Error: Client with id {client_id} not found.")
-        session.close()
-        sys.exit(1)
+        return 0
 
     count = 0
     for item in FAQ_DATA:
@@ -215,7 +213,7 @@ def seed_faqs(client_id: int) -> int:
         embedding = generate_embedding(question)
 
         existing = (
-            session.query(FaqCache)
+            db.query(FaqCache)
             .filter(
                 FaqCache.client_id == client_id,
                 FaqCache.question.ilike(question),
@@ -233,20 +231,23 @@ def seed_faqs(client_id: int) -> int:
                 answer=answer,
                 embedding=embedding,
             )
-            session.add(faq)
+            db.add(faq)
 
         count += 1
 
-    session.commit()
-    session.close()
+    db.commit()
     return count
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
+    if len(sys.argv) not in (2, 3):
         print("Usage: python scripts/seed_notary.py <client_id>")
         sys.exit(1)
 
     client_id = int(sys.argv[1])
-    total = seed_faqs(client_id)
-    print(f"Seeded {total} FAQ entries for client {client_id}.")
+    session = SessionLocal()
+    try:
+        total = seed_faqs(session, client_id)
+        print(f"Seeded {total} FAQ entries for client {client_id}.")
+    finally:
+        session.close()
